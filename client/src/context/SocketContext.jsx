@@ -5,6 +5,19 @@ import toast from 'react-hot-toast';
 
 const SocketContext = createContext(null);
 
+const getSocketURL = () => {
+  if (import.meta.env.VITE_SOCKET_URL) {
+    return import.meta.env.VITE_SOCKET_URL;
+  }
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '');
+  }
+  if (import.meta.env.PROD) {
+    return 'https://freelancer-client-platform.onrender.com';
+  }
+  return '/';
+};
+
 export const SocketProvider = ({ children }) => {
   const { user } = useAuth();
   const [socket, setSocket] = useState(null);
@@ -20,8 +33,12 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    const newSocket = io('/', {
+    const socketUrl = getSocketURL();
+    const token = localStorage.getItem('token');
+
+    const newSocket = io(socketUrl, {
       query: { userId: user._id },
+      auth: { token },
       withCredentials: true,
       transports: ['websocket', 'polling'],
     });

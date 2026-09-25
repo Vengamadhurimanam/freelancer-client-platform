@@ -108,19 +108,19 @@ const login = async (req, res, next) => {
 const logout = async (req, res, next) => {
   try {
     const isProd = process.env.NODE_ENV === 'production';
-    res.cookie('accessToken', 'none', {
-      expires: new Date(Date.now() + 5 * 1000),
+    const cookieOptions = {
       httpOnly: true,
       secure: isProd,
-      sameSite: 'lax',
+      sameSite: isProd ? 'none' : 'lax',
       path: '/',
+    };
+    res.cookie('accessToken', 'none', {
+      ...cookieOptions,
+      expires: new Date(Date.now() + 5 * 1000),
     });
     res.cookie('refreshToken', 'none', {
+      ...cookieOptions,
       expires: new Date(Date.now() + 5 * 1000),
-      httpOnly: true,
-      secure: isProd,
-      sameSite: 'lax',
-      path: '/',
     });
 
     return res.status(200).json({
@@ -132,12 +132,15 @@ const logout = async (req, res, next) => {
   }
 };
 
-// @desc    Refresh access token using refresh token cookie
+// @desc    Refresh access token using refresh token cookie or body
 // @route   POST /api/auth/refresh
 // @access  Public
 const refresh = async (req, res, next) => {
   try {
-    const refreshToken = req.cookies.refreshToken;
+    const refreshToken =
+      req.cookies?.refreshToken ||
+      req.body?.refreshToken ||
+      req.headers['x-refresh-token'];
 
     if (!refreshToken) {
       return res.status(401).json({
@@ -168,7 +171,7 @@ const refresh = async (req, res, next) => {
       expires: new Date(Date.now() + 15 * 60 * 1000),
       httpOnly: true,
       secure: isProd,
-      sameSite: 'lax',
+      sameSite: isProd ? 'none' : 'lax',
       path: '/',
     });
 

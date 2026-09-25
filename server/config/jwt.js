@@ -37,7 +37,7 @@ const sendTokenResponse = (user, statusCode, res, message = 'Success') => {
     expires: new Date(Date.now() + 15 * 60 * 1000), // 15 mins
     httpOnly: true,
     secure: isProd,
-    sameSite: 'lax',
+    sameSite: isProd ? 'none' : 'lax',
     path: '/',
   };
 
@@ -45,7 +45,7 @@ const sendTokenResponse = (user, statusCode, res, message = 'Success') => {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     httpOnly: true,
     secure: isProd,
-    sameSite: 'lax',
+    sameSite: isProd ? 'none' : 'lax',
     path: '/',
   };
 
@@ -64,7 +64,8 @@ const sendTokenResponse = (user, statusCode, res, message = 'Success') => {
       isEmailVerified: user.isEmailVerified,
       createdAt: user.createdAt,
     },
-    accessToken, // also sent in response body for flexible header auth if preferred
+    accessToken,
+    refreshToken,
   });
 };
 

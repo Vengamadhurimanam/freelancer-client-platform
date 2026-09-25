@@ -22,6 +22,8 @@ export const AuthProvider = ({ children }) => {
         setProfile(res.data.profile);
       }
     } catch {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       setUser(null);
       setProfile(null);
     } finally {
@@ -33,6 +35,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.post('/auth/login', { email, password });
       if (res.data.success) {
+        if (res.data.accessToken) {
+          localStorage.setItem('token', res.data.accessToken);
+        }
+        if (res.data.refreshToken) {
+          localStorage.setItem('refreshToken', res.data.refreshToken);
+        }
         setUser(res.data.user);
         await checkAuth(); // Load detailed profile
         toast.success(`Welcome back, ${res.data.user.name}!`);
@@ -49,6 +57,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.post('/auth/register', { name, email, password, role });
       if (res.data.success) {
+        if (res.data.accessToken) {
+          localStorage.setItem('token', res.data.accessToken);
+        }
+        if (res.data.refreshToken) {
+          localStorage.setItem('refreshToken', res.data.refreshToken);
+        }
         setUser(res.data.user);
         await checkAuth();
         toast.success('Account created successfully!');
@@ -67,6 +81,8 @@ export const AuthProvider = ({ children }) => {
     } catch {
       // ignore
     } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       setUser(null);
       setProfile(null);
       toast.success('Logged out successfully');

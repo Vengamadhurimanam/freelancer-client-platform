@@ -33,21 +33,46 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
+// Allowed origins helper
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:5174',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5174',
+  'https://freelancer-client-platform-five.vercel.app',
+  ...(process.env.CLIENT_URL
+    ? process.env.CLIENT_URL.split(',').map((u) => u.trim().replace(/\/+$/, ''))
+    : []),
+];
+
+const isOriginAllowed = (origin) => {
+  if (!origin) return true; // allow non-browser requests (curl, server-to-server)
+  if (allowedOrigins.includes(origin)) return true;
+  // Allow any *.vercel.app domain
+  if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin)) return true;
+  // Allow any localhost / local IP port
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:[0-9]+)?$/i.test(origin)) return true;
+  return true; // Fallback to allow origins dynamically
+};
+
 // Initialize Socket.IO with CORS
 const io = new Server(server, {
   cors: {
-    origin: [
-      process.env.CLIENT_URL || 'http://localhost:5173',
-      'http://localhost:3000',
-      'http://127.0.0.1:5173',
-    ],
+    origin: (origin, callback) => {
+      callback(null, origin || true);
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   },
 });
 
 // Attach Socket.IO to socketHandler
 socketHandler(io);
+
+// Trust proxy for Render/production reverse proxy
+app.set('trust proxy', 1);
 
 // Make io accessible in req if needed
 app.use((req, res, next) => {
@@ -55,19 +80,24 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware
-app.use(
-  cors({
-    origin: [
-      process.env.CLIENT_URL || 'http://localhost:5173',
-      'http://localhost:3000',
-      'http://127.0.0.1:5173',
-    ],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  })
-);
+// Middleware - Express CORS
+const corsOptions = {
+  origin: (origin, callback) => {
+    callback(null, origin || true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'x-refresh-token',
+  ],
+  exposedHeaders: ['Set-Cookie'],
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));

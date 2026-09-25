@@ -1,16 +1,33 @@
 import axios from 'axios';
 
+const getBaseURL = () => {
+  if (import.meta.env.VITE_API_URL) {
+    const cleanUrl = import.meta.env.VITE_API_URL.replace(/\/+$/, '');
+    return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
+  }
+  if (import.meta.env.PROD) {
+    return 'https://freelancer-client-platform.onrender.com/api';
+  }
+  return '/api';
+};
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: getBaseURL(),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor
+// Request interceptor: attach token from localStorage if present
 api.interceptors.request.use(
-  (config) => config,
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
   (error) => Promise.reject(error)
 );
 
@@ -25,16 +42,27 @@ api.interceptors.response.use(
       error.response.status === 401 &&
       error.response.data?.code === 'TOKEN_EXPIRED' &&
       !originalRequest._retry &&
-      !originalRequest.url.includes('/auth/refresh') &&
-      !originalRequest.url.includes('/auth/login')
+      !originalRequest.url?.includes('/auth/refresh') &&
+      !originalRequest.url?.includes('/auth/login')
     ) {
       originalRequest._retry = true;
       try {
-        await axios.post('/api/auth/refresh', {}, { withCredentials: true });
+        const refreshToken = localStorage.getItem('refreshToken');
+        const res = await axios.post(
+          `${getBaseURL()}/auth/refresh`,
+          { refreshToken },
+          { withCredentials: true }
+        );
+
+        if (res.data?.accessToken) {
+          localStorage.setItem('token', res.data.accessToken);
+          originalRequest.headers.Authorization = `Bearer ${res.data.accessToken}`;
+        }
         return api(originalRequest);
-      } catch {
-        // Refresh failed: session expired
-        return Promise.reject(error);
+      } catch (refreshErr) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        return Promise.reject(refreshErr);
       }
     }
 
@@ -42,4 +70,5 @@ api.interceptors.response.use(
   }
 );
 
+export { getBaseURL };
 export default api;
