@@ -10,6 +10,7 @@ const LoginPage = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const from = location.state?.from?.pathname || null;
@@ -18,6 +19,7 @@ const LoginPage = () => {
     e.preventDefault();
     if (!email || !password) return;
 
+    setError('');
     setLoading(true);
     const result = await login(email, password);
     setLoading(false);
@@ -34,6 +36,8 @@ const LoginPage = () => {
       } else {
         navigate('/');
       }
+    } else {
+      setError(result.message || 'Login failed');
     }
   };
 
@@ -102,6 +106,13 @@ const LoginPage = () => {
 
         {/* Login Form */}
         <div className="saas-card p-6 sm:p-8 bg-white">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-start gap-2">
+              <span className="font-bold">Error:</span>
+              <span>{error}</span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">

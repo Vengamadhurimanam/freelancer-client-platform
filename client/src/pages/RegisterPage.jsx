@@ -11,12 +11,14 @@ const RegisterPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('FREELANCER'); // 'FREELANCER' | 'CLIENT'
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !email || !password) return;
 
+    setError('');
     setLoading(true);
     const result = await register(name, email, password, role);
     setLoading(false);
@@ -27,6 +29,8 @@ const RegisterPage = () => {
       } else {
         navigate('/client/dashboard');
       }
+    } else {
+      setError(result.message || 'Registration failed');
     }
   };
 
@@ -74,6 +78,13 @@ const RegisterPage = () => {
               I'm a Client
             </button>
           </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-start gap-2">
+              <span className="font-bold">Error:</span>
+              <span>{error}</span>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
