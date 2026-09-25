@@ -34,6 +34,18 @@ const errorHandler = (err, req, res, next) => {
     return res.status(401).json({ success: false, message: 'Token expired', code: 'TOKEN_EXPIRED' });
   }
 
+  // Mongoose buffering / connection error
+  if (
+    err.name === 'MongooseError' &&
+    (err.message.includes('buffering timed out') || err.message.includes('bufferCommands'))
+  ) {
+    return res.status(503).json({
+      success: false,
+      message:
+        'Database connection unavailable. Please check MONGODB_URI in your Render environment variables and ensure MongoDB Atlas IP Access allows 0.0.0.0/0.',
+    });
+  }
+
   res.status(error.statusCode || 500).json({
     success: false,
     message: error.message || 'Internal Server Error',

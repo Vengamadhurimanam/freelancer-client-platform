@@ -6,6 +6,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const path = require('path');
+const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/error');
 const socketHandler = require('./sockets/socketHandler');
@@ -112,8 +113,11 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Health check route
 app.get('/api/health', (req, res) => {
+  const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  const dbStatus = states[mongoose.connection.readyState] || 'unknown';
   res.status(200).json({
     status: 'healthy',
+    database: dbStatus,
     timestamp: new Date().toISOString(),
     service: 'SkillBridge Platform API',
     version: '1.0.0',
