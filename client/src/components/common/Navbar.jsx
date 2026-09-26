@@ -79,32 +79,35 @@ const Navbar = () => {
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-6">
               <Link
-                to="/projects"
-                className={`text-sm font-medium transition-colors ${
-                  location.pathname === '/projects' ? 'text-blue-600' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Browse Projects
-              </Link>
-              <Link
                 to="/freelancers"
                 className={`text-sm font-medium transition-colors ${
-                  location.pathname === '/freelancers' ? 'text-blue-600' : 'text-slate-600 hover:text-slate-900'
+                  location.pathname === '/freelancers' || location.pathname.startsWith('/freelancer')
+                    ? 'text-blue-600'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Find Freelancers
+                Freelancer
               </Link>
-              {user?.role === 'FREELANCER' && (
-                <Link
-                  to="/freelancer/assessments"
-                  className={`text-sm font-medium flex items-center gap-1.5 transition-colors ${
-                    location.pathname === '/freelancer/assessments' ? 'text-blue-600' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <Award className="w-4 h-4 text-emerald-600" />
-                  Skill Assessments
-                </Link>
-              )}
+              <Link
+                to="/projects"
+                className={`text-sm font-medium transition-colors ${
+                  location.pathname === '/projects' || location.pathname.startsWith('/client')
+                    ? 'text-blue-600'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Client
+              </Link>
+              <Link
+                to="/admin/dashboard"
+                className={`text-sm font-medium transition-colors ${
+                  location.pathname.startsWith('/admin')
+                    ? 'text-blue-600'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Admin
+              </Link>
             </nav>
           </div>
 
@@ -354,28 +357,26 @@ const Navbar = () => {
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 space-y-3">
           <Link
-            to="/projects"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-base font-medium text-slate-700"
-          >
-            Browse Projects
-          </Link>
-          <Link
             to="/freelancers"
             onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-base font-medium text-slate-700"
+            className="block py-2 text-base font-medium text-slate-700 hover:text-blue-600"
           >
-            Find Freelancers
+            Freelancer
           </Link>
-          {user?.role === 'FREELANCER' && (
-            <Link
-              to="/freelancer/assessments"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-base font-medium text-emerald-600 font-semibold"
-            >
-              ⭐ Take Skill Assessments
-            </Link>
-          )}
+          <Link
+            to="/projects"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block py-2 text-base font-medium text-slate-700 hover:text-blue-600"
+          >
+            Client
+          </Link>
+          <Link
+            to="/admin/dashboard"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block py-2 text-base font-medium text-slate-700 hover:text-blue-600"
+          >
+            Admin
+          </Link>
 
           {user ? (
             <div className="border-t border-slate-200 pt-3 space-y-2">
